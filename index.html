@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>GitHub Cloud Storage</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#121d30;--panel2:#17243a;--line:#263750;--text:#edf4ff;--muted:#9fb0c8;--blue:#4388ff;--green:#26c281;--red:#ff647c}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 500px at 85% -10%,#1c3760 0%,transparent 60%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    .wrap{max-width:980px;margin:auto;padding:28px 18px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#4388ff,#7c5cff);display:grid;place-items:center;font-size:23px;box-shadow:0 8px 24px #4388ff35}
+    h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:4px}.repo{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px}
+    .hero{background:linear-gradient(135deg,#182c49,#142039);border:1px solid #2b4262;border-radius:22px;padding:24px;margin-bottom:18px}
+    .hero h2{font-size:21px;margin:0 0 8px}.hero p{color:var(--muted);margin:0 0 18px;line-height:1.7}
+    .drop{border:1.5px dashed #5274a1;border-radius:17px;padding:28px 16px;text-align:center;background:#0e1a2d;transition:.2s}.drop.drag{border-color:var(--green);background:#102b2a}
+    .cloud{font-size:35px;margin-bottom:8px}.drop strong{display:block;font-size:16px}.drop small{display:block;color:var(--muted);margin:7px 0 16px}
+    button,.choose{border:0;border-radius:12px;padding:11px 17px;background:var(--blue);color:white;font-weight:700;font-size:14px;cursor:pointer}.choose input{display:none}
+    button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#263750}.danger{background:#482536;color:#ffb5c0}
+    .notice{font-size:12px;color:#ffda9b;line-height:1.6;margin-top:13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}.stat,.section{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:17px}.stat span{color:var(--muted);font-size:12px}.stat b{display:block;font-size:21px;margin-top:5px}
+    .section{margin-top:16px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.section h3{margin:0;font-size:16px}
+    .file{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.file:first-of-type{border-top:0}
+    .thumb{width:43px;height:43px;border-radius:11px;background:var(--panel2);display:grid;place-items:center;overflow:hidden;flex:none;font-size:20px}.thumb img{width:100%;height:100%;object-fit:cover}
+    .fileinfo{min-width:0;flex:1}.filename{font-size:13px;font-weight:650;overflow-wrap:anywhere}.meta{font-size:11px;color:var(--muted);margin-top:4px}
+    .file a{color:#8eb8ff;text-decoration:none;font-size:12px;white-space:nowrap}.empty{text-align:center;color:var(--muted);padding:24px 8px;font-size:13px}
+    .progress{height:7px;background:#263750;border-radius:99px;overflow:hidden;margin-top:12px;display:none}.bar{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .2s}
+    .status{font-size:12px;margin-top:9px;color:var(--muted);min-height:18px}.status.ok{color:#65e0ad}.status.err{color:#ff8293}
+    footer{text-align:center;color:#70839e;font-size:11px;margin-top:24px}
+    @media(max-width:620px){.top{align-items:flex-start;flex-direction:column}.repo{align-self:flex-start}.grid{grid-template-columns:1fr 1fr}.hero{padding:18px}.file{gap:9px}.file a{font-size:11px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">☁</div><div><h1>GitHub Cloud Storage</h1><div class="sub">مساحتك السحابية الخاصة</div></div></div>
+    <div class="repo" id="repoLabel">GitHub Repository</div>
+  </header>
+
+  <section class="hero">
+    <h2>ارفع ملفاتك بكل سهولة</h2>
+    <p>احفظ الصور والفيديوهات والمستندات داخل مستودع GitHub المرتبط بالتطبيق.</p>
+    <div class="drop" id="drop">
+      <div class="cloud">☁️</div>
+      <strong>اسحب الملفات إلى هنا</strong>
+      <small>أو اختر ملفات من جهازك لرفعها</small>
+      <label class="choose">اختيار الملفات<input id="fileInput" type="file" multiple></label>
+      <div class="progress" id="progress"><div class="bar" id="bar"></div></div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+    <div class="notice">تنبيه: يفضّل ألا يتجاوز الملف الواحد 25 MB عند الرفع عبر واجهة GitHub Contents API. لا ترفع ملفات خاصة أو حساسة إلى مستودع عام.</div>
+  </section>
+
+  <div class="grid">
+    <div class="stat"><span>عدد الملفات المعروضة</span><b id="count">—</b></div>
+    <div class="stat"><span>حالة الاتصال</span><b id="connection" style="font-size:16px">غير متصل</b></div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><h3>ملفاتي</h3><button class="secondary" id="refresh">تحديث</button></div>
+    <div id="files"><div class="empty">اضبط رابط خدمة الرفع أولاً، ثم حدّث القائمة.</div></div>
+  </section>
+  <footer>GitHub Cloud Storage · واجهة تجريبية قابلة للتخصيص</footer>
+</div>
+<script>
+  // ضع رابط Cloudflare Worker بعد نشره، مثال: https://your-worker.yourname.workers.dev
+  const API_BASE = "PASTE_YOUR_WORKER_URL_HERE";
+
+  const $ = id => document.getElementById(id);
+  const input = $("fileInput"), drop = $("drop");
+  const humanSize = n => n < 1024 ? n+" B" : n < 1048576 ? (n/1024).toFixed(1)+" KB" : (n/1048576).toFixed(1)+" MB";
+  const iconFor = name => /\.(png|jpe?g|gif|webp|svg)$/i.test(name) ? "🖼️" : /\.(mp4|mov|webm|m4v)$/i.test(name) ? "🎬" : /\.(pdf)$/i.test(name) ? "📕" : "📄";
+  function setStatus(message, kind="") { $("status").textContent=message; $("status").className="status "+kind; }
+  function configured(){ return API_BASE.startsWith("https://") && !API_BASE.includes("PASTE_"); }
+
+  async function uploadFiles(files) {
+    if (!configured()) { setStatus("أضف رابط خدمة Worker في متغير API_BASE داخل index.html أولاً.","err"); return; }
+    const list = Array.from(files || []);
+    if (!list.length) return;
+    for (let i=0;i<list.length;i++) {
+      const file=list[i];
+      if (file.size > 25*1024*1024) { setStatus(`تم تخطي ${file.name}: الحد الحالي 25 MB للملف الواحد.`,"err"); continue; }
+      $("progress").style.display="block"; $("bar").style.width="0%";
+      setStatus(`جارٍ تجهيز ${file.name} (${i+1}/${list.length})...`);
+      try {
+        const dataUrl = await new Promise((resolve,reject)=>{
+          const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=()=>reject(new Error("تعذرت قراءة الملف")); r.readAsDataURL(file);
+        });
+        const base64 = String(dataUrl).split(",")[1];
+        $("bar").style.width="35%";
+        const response=await fetch(API_BASE.replace(/\/$/,"")+"/upload",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({name:file.name,mimeType:file.type||"application/octet-stream",content:base64})
+        });
+        const result=await response.json().catch(()=>({error:"رد غير مفهوم من الخادم"}));
+        if(!response.ok) throw new Error(result.error || "فشل الرفع");
+        $("bar").style.width="100%";
+        setStatus(`تم رفع ${file.name} بنجاح ✓`,"ok");
+      } catch(e) { setStatus(`تعذر رفع ${file.name}: ${e.message}`,"err"); }
+    }
+    input.value="";
+    await loadFiles();
+    setTimeout(()=>{$("progress").style.display="none";$("bar").style.width="0%"},900);
+  }
+
+  async function loadFiles(){
+    if(!configured()){ $("files").innerHTML='<div class="empty">أضف رابط خدمة Worker في الكود لعرض الملفات.</div>'; $("connection").textContent="غير مضبوط"; return; }
+    $("files").innerHTML='<div class="empty">جارٍ تحميل الملفات...</div>';
+    try{
+      const r=await fetch(API_BASE.replace(/\/$/,"")+"/files");
+      const data=await r.json();
+      if(!r.ok) throw new Error(data.error||"تعذر الاتصال");
+      $("connection").textContent="متصل ✓"; $("connection").style.color="var(--green)";
+      $("count").textContent=data.files.length;
+      if(!data.files.length){$("files").innerHTML='<div class="empty">لا توجد ملفات بعد. ارفع أول ملف لك!</div>';return;}
+      $("files").innerHTML="";
+      data.files.forEach(f=>{
+        const row=document.createElement("div"); row.className="file";
+        const thumb=document.createElement("div"); thumb.className="thumb";
+        if (/\\.(png|jpe?g|gif|webp)$/i.test(f.name)) {
+          const img=document.createElement("img"); img.src=f.download_url; img.alt=""; thumb.append(img);
+        } else { thumb.textContent=iconFor(f.name); }
+        const info=document.createElement("div"); info.className="fileinfo";
+        const name=document.createElement("div"); name.className="filename"; name.textContent=f.name;
+        const meta=document.createElement("div"); meta.className="meta"; meta.textContent=humanSize(f.size||0);
+        info.append(name,meta);
+        const link=document.createElement("a"); link.href=f.download_url; link.target="_blank"; link.rel="noopener"; link.textContent="فتح ↗";
+        row.append(thumb,info,link); $("files").append(row);
+      });
+    }catch(e){$("connection").textContent="غير متصل";$("connection").style.color="var(--red)";$("files").innerHTML='<div class="empty">'+e.message+'</div>';}
+  }
+
+  input.addEventListener("change",e=>uploadFiles(e.target.files));
+  $("refresh").addEventListener("click",loadFiles);
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("drag")}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("drag")}));
+  drop.addEventListener("drop",e=>uploadFiles(e.dataTransfer.files));
+  loadFiles();
+</script>
+</body>
+</html>
